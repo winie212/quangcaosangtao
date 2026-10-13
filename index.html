@@ -1,0 +1,1647 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Winie – Thư viện mẫu quảng cáo sáng tạo</title>
+     <link rel="icon" type="image/png" href="wine.png">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Quicksand:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="stylee.css" />
+  </head>
+  <body>
+    <div class="blobs"><i></i><i></i><i></i></div>
+    <header>
+      <div class="logo" onclick="home()">winie<i>.</i></div>
+      <nav id="dock"></nav>
+      <nav id="nav"></nav>
+    </header>
+    <main id="app"></main>
+    <footer>© Winie · Thư viện mẫu quảng cáo sáng tạo</footer>
+    <div id="toast"></div>
+    <script>
+      /* ===================== TIỆN ÍCH CHUNG ===================== */
+      const $ = (s) => document.querySelector(s),
+        esc = (s) =>
+          String(s).replace(/[&<>"']/g, (c) => "&#" + c.charCodeAt(0) + ";");
+      const L = {
+          banner: "Banner",
+          poster: "Poster",
+          video: "Video ads",
+          social: "Social ads",
+        },
+        ST = {
+          pending: ["Chờ duyệt", "y"],
+          approved: ["Đã duyệt", "g"],
+          rejected: ["Bị từ chối", "r"],
+        },
+        RL = {
+          member: "Thành viên",
+          creator: "Nhà sáng tạo",
+          mod: "Kiểm duyệt viên",
+          admin: "Quản trị viên",
+        };
+      const today = () => new Date().toLocaleDateString("vi-VN");
+      /* ===================== DỮ LIỆU MẪU - sửa mẫu quảng cáo, ngành hàng, thẻ ở đây ===================== */
+      function seed() {
+        const d = {
+          users: [
+            [1, "Mochi Thành Viên", "member@demo.vn", "member"],
+            [2, "Bông Sáng Tạo", "creator@demo.vn", "creator"],
+            [3, "Kẹo Kiểm Duyệt", "mod@demo.vn", "mod"],
+            [4, "Mây Quản Trị", "admin@demo.vn", "admin"],
+          ].map((x) => ({
+            id: x[0],
+            name: x[1],
+            email: x[2],
+            pw: "123",
+            role: x[3],
+            locked: 0,
+          })),
+          cats: [
+            "Thời trang",
+            "Ẩm thực",
+            "Công nghệ",
+            "Mỹ phẩm",
+            "Du lịch",
+            "Thể thao",
+            "Giáo dục",
+            "Thú cưng",
+            "Xe cộ",
+          ].map((n, i) => ({ id: i + 1, name: n })),
+          tags: [
+            ["Tối giản", "style"],
+            ["Hoạt hình", "style"],
+            ["Retro", "style"],
+            ["Hồng", "color"],
+            ["Xanh mint", "color"],
+            ["Vàng", "color"],
+          ].map((x, i) => ({ id: i + 1, name: x[0], kind: x[1] })),
+          // MUỐN DÙNG ẢNH THẬT: thêm đường dẫn ảnh làm phần tử thứ 11 của mỗi mẫu,
+          // ví dụ ..., 0, "images/anh1.jpg"]  (để ảnh trong thư mục images cạnh index.html)
+          ads: [
+            [
+              "Banner khuyến mãi thời trang",
+              "Mẫu banner khuyến mãi, bố cục lớn, nút kêu gọi nổi bật",
+              "banner",
+              1,
+              [2, 4],
+              340,
+              "Flash Sale Ngọt Ngào",
+              "Giảm đến 50% cuối tuần này",
+              "Mua ngay",
+              0,
+            ],
+            [
+              "Poster giải chạy thể thao",
+              "Mẫu poster sự kiện thể thao, chữ lớn dễ đọc",
+              "poster",
+              6,
+              [3, 6],
+              45,
+              "Chạy Cùng Mùa Hè",
+              "Giải chạy 5K · Sáng chủ nhật",
+              "Đăng ký",
+              1,
+            ],
+            [
+              "Story mỹ phẩm chiết xuất hoa",
+              "Mẫu story dọc giới thiệu dòng dưỡng da từ hoa, ảnh hoa làm nền",
+              "social",
+              4,
+              [1, 5],
+              160,
+              "Nở Rộ Làn Da",
+              "Dưỡng ẩm từ cánh hoa thiên nhiên",
+              "Xem ngay",
+              2,
+              "images/flower.jpg",
+            ],
+            [
+              "Video ads mở hộp sản phẩm",
+              "Mẫu video ngắn mở hộp, nhịp nhanh",
+              "video",
+              3,
+              [2, 5],
+              200,
+              "Mở Hộp Bất Ngờ",
+              "Review 15 giây siêu nhanh",
+              "Xem video",
+              3,
+            ],
+            [
+              "Banner quán cà phê",
+              "Mẫu banner quán cà phê, ảnh ly cà phê làm nền",
+              "banner",
+              2,
+              [2, 4],
+              10,
+              "Một Ly Cho Ngày Mới",
+              "Cà phê rang xay, mở cửa từ 7h",
+              "Ghé quán",
+              1,
+              "images/coffee.jpg",
+            ],
+            [
+              "Poster lookbook thời trang hè",
+              "Mẫu poster bộ sưu tập thời trang",
+              "poster",
+              1,
+              [3, 6],
+              60,
+              "Hè Rực Rỡ",
+              "Lookbook bộ sưu tập mới",
+              "Khám phá",
+              2,
+            ],
+            [
+              "Social ads son tint",
+              "Mẫu bài đăng mạng xã hội cho mỹ phẩm",
+              "social",
+              4,
+              [4],
+              320,
+              "Môi Xinh Tức Thì",
+              "Tint pastel lên màu chuẩn",
+              "Thử ngay",
+              0,
+            ],
+            [
+              "Poster khóa học online",
+              "Mẫu poster tuyển sinh, hình phi hành gia gợi cảm hứng bay cao",
+              "poster",
+              7,
+              [3, 6],
+              20,
+              "Bay Cao Cùng Kiến Thức",
+              "Khóa online · Học thử miễn phí",
+              "Đăng ký",
+              3,
+              "images/astronaut.jpg",
+            ],
+            [
+              "Carousel ra mắt ứng dụng",
+              "Mẫu carousel nhiều trang giới thiệu ứng dụng, ảnh tên lửa làm nền",
+              "social",
+              3,
+              [2, 4],
+              280,
+              "Cất Cánh Cùng Ứng Dụng Mới",
+              "Phiên bản mới vừa phóng",
+              "Tải ngay",
+              0,
+              "images/rocket.jpg",
+            ],
+            [
+              "Banner tour du lịch",
+              "Mẫu banner tour, ảnh kiến trúc phương Đông làm nền",
+              "banner",
+              5,
+              [1, 5],
+              190,
+              "Dạo Bước Phương Đông",
+              "Tour 3 ngày 2 đêm",
+              "Đặt tour",
+              2,
+              "images/china.jpg",
+            ],
+            [
+              "Poster đêm nhạc",
+              "Mẫu poster sự kiện âm nhạc, màu rực",
+              "poster",
+              3,
+              [3, 6],
+              300,
+              "Đêm Nhạc Neon",
+              "Sân khấu mở · 20h thứ bảy",
+              "Lấy vé",
+              1,
+            ],
+            [
+              "Video ads review chăm sóc da",
+              "Mẫu video review kiểu trước và sau",
+              "video",
+              4,
+              [2, 4],
+              330,
+              "Da Sáng Sau 7 Ngày",
+              "So sánh trước và sau 7 ngày",
+              "Xem ngay",
+              3,
+            ],
+
+            [
+              "Banner cửa hàng thú cưng",
+              "Mẫu banner cửa hàng thú cưng, ảnh mèo làm nền",
+              "banner",
+              8,
+              [2, 4],
+              25,
+              "Bé Cưng Cũng Cần Được Yêu",
+              "Phụ kiện và đồ ăn cho thú cưng",
+              "Xem ngay",
+              0,
+              "images/cat.jpg",
+            ],
+            [
+              "Poster workshop màu sắc",
+              "Mẫu poster workshop sáng tạo, vòng màu làm nền",
+              "poster",
+              7,
+              [2, 5],
+              160,
+              "Vẽ Cùng Màu Sắc",
+              "Workshop 2 giờ · Có sẵn dụng cụ",
+              "Giữ chỗ",
+              0,
+              "images/colorwheel.jpg",
+            ],
+            [
+              "Story săn sale 12.12",
+              "Mẫu story đếm ngược khuyến mãi",
+              "social",
+              1,
+              [2, 4],
+              10,
+              "Săn Sale 12.12",
+              "Đếm ngược 24 giờ cuối",
+              "Săn ngay",
+              1,
+            ],
+            [
+              "Banner cho thuê xe máy",
+              "Mẫu banner cho thuê xe, ảnh xe làm nền",
+              "banner",
+              9,
+              [3, 6],
+              0,
+              "Rong Ruổi Khắp Phố",
+              "Thuê xe máy theo ngày, giá mềm",
+              "Thuê ngay",
+              0,
+              "images/motorcycle.jpg",
+            ],
+            [
+              "Poster đêm ngắm sao",
+              "Mẫu poster sự kiện thiên văn, ảnh bầu trời sao",
+              "poster",
+              7,
+              [2, 5],
+              250,
+              "Một Đêm Ngắm Sao",
+              "Câu lạc bộ thiên văn · Thứ bảy này",
+              "Giữ chỗ",
+              0,
+              "images/hubble.jpg",
+            ],
+            [
+              "Banner trà trái cây mùa hè",
+              "Mẫu banner đồ uống tươi mát",
+              "banner",
+              2,
+              [2, 5],
+              130,
+              "Mát Lạnh Ngày Hè",
+              "Trà trái cây tươi, mua 1 tặng 1",
+              "Thử ngay",
+              2,
+            ],
+            [
+              "Poster lễ hội âm nhạc",
+              "Mẫu poster lễ hội ngoài trời",
+              "poster",
+              3,
+              [3, 6],
+              270,
+              "Sống Trọn Mùa Hè",
+              "Lễ hội âm nhạc · 3 ngày",
+              "Lấy vé",
+              0,
+            ],
+            [
+              "Video ads ứng dụng học tiếng Anh",
+              "Mẫu video giới thiệu ứng dụng học tập",
+              "video",
+              7,
+              [2, 5],
+              210,
+              "Học Tiếng Anh Mỗi Ngày",
+              "10 phút là đủ, học mọi lúc",
+              "Học thử",
+              1,
+            ],
+            [
+              "Social ads phòng tập yoga",
+              "Mẫu bài đăng lớp yoga nhẹ nhàng",
+              "social",
+              6,
+              [1, 5],
+              150,
+              "Thở Sâu, Sống Chậm",
+              "Lớp yoga buổi sáng cho người mới",
+              "Đăng ký",
+              2,
+            ],
+            [
+              "Banner spa thư giãn",
+              "Mẫu banner spa, tông màu dịu",
+              "banner",
+              4,
+              [1, 4],
+              330,
+              "Một Giờ Cho Riêng Bạn",
+              "Massage và chăm sóc da thư giãn",
+              "Đặt lịch",
+              1,
+            ],
+            [
+              "Poster tuyển thực tập sinh",
+              "Mẫu poster tuyển dụng trẻ trung",
+              "poster",
+              7,
+              [1, 6],
+              50,
+              "Cùng Lớn Lên Với Chúng Tôi",
+              "Tuyển thực tập sinh thiết kế",
+              "Ứng tuyển",
+              3,
+            ],
+            [
+              "Carousel công thức làm bánh",
+              "Mẫu carousel chia sẻ công thức",
+              "social",
+              2,
+              [2, 4],
+              350,
+              "3 Bước Làm Bánh Dễ",
+              "Vuốt để xem công thức",
+              "Xem tiếp",
+              0,
+            ],
+            [
+              "Banner ngày hội sách",
+              "Mẫu banner sự kiện sách",
+              "banner",
+              7,
+              [3, 6],
+              40,
+              "Ngày Hội Sách Mùa Thu",
+              "Giảm 30% mọi đầu sách",
+              "Ghé thăm",
+              0,
+            ],
+            [
+              "Video ads du lịch biển",
+              "Mẫu video quảng bá nghỉ dưỡng",
+              "video",
+              5,
+              [1, 5],
+              195,
+              "Biển Gọi, Bạn Đi",
+              "Combo nghỉ dưỡng 3 ngày 2 đêm",
+              "Đặt ngay",
+              2,
+            ],
+          ].map((x, i) => ({
+            id: i + 1,
+            title: x[0],
+            desc: x[1],
+            type: x[2],
+            cat: x[3],
+            tags: x[4],
+            h: x[5],
+            t1: x[6],
+            t2: x[7],
+            cta: x[8],
+            lay: x[9],
+            owner: 2,
+            status: i == 5 ? "pending" : i == 6 ? "rejected" : "approved",
+            reason: i == 6 ? "Màu chữ khó đọc, vui lòng chỉnh lại" : "",
+            views: 10 * i + 5,
+            img: x[10] || "",
+            date: today(),
+          })),
+          comments: [
+            { id: 1, ad: 1, u: 1, t: "Màu đáng yêu quá! ", d: today() },
+            {
+              id: 2,
+              ad: 2,
+              u: 1,
+              t: "Thích phong cách retro này ghê",
+              d: today(),
+            },
+          ],
+          ratings: [
+            { ad: 1, u: 1, s: 5 },
+            { ad: 2, u: 1, s: 4 },
+          ],
+          saves: [{ ad: 1, u: 1 }],
+          nid: 100,
+        };
+        return d;
+      }
+      /* ===================== TRẠNG THÁI & LƯU TRỮ ===================== */
+      let DB,
+        me = null,
+        view = { n: "home" },
+        F = { q: "", cat: "", style: "", color: "", type: "", sort: "new" };
+      try {
+        DB = JSON.parse(localStorage.getItem("winie3"));
+      } catch (e) {}
+      if (!DB || !DB.users) DB = seed();
+      const save = () => {
+        try {
+          localStorage.setItem("winie3", JSON.stringify(DB));
+        } catch (e) {}
+      };
+      const A = (id) => DB.ads.find((a) => a.id == id),
+        U = (id) => DB.users.find((u) => u.id == id) || { name: "(đã xóa)" },
+        nid = () => ++DB.nid;
+      const avg = (id) => {
+          const r = DB.ratings.filter((x) => x.ad == id);
+          return r.length ? r.reduce((s, x) => s + x.s, 0) / r.length : 0;
+        },
+        ns = (id) => DB.saves.filter((x) => x.ad == id).length;
+      const cn = (id) =>
+          (DB.cats.find((c) => c.id == id) || { name: "?" }).name,
+        tg = (id) => (DB.tags.find((t) => t.id == id) || { name: "?" }).name;
+      let tt;
+      function toast(m) {
+        if (/[💖🎉⭐✅🌷🎀💌]/u.test(m)) burst();
+        const t = $("#toast");
+        t.textContent = m;
+        t.classList.add("on");
+        clearTimeout(tt);
+        tt = setTimeout(() => t.classList.remove("on"), 2600);
+      }
+      const go = (n, id) => {
+        view = { n, id };
+        R();
+        scrollTo(0, 0);
+      };
+      const home = () =>
+        go(
+          me && me.role == "mod"
+            ? "mod"
+            : me && me.role == "admin"
+              ? "accts"
+              : "home",
+        );
+      const need = () => {
+        if (me) return 1;
+        view.back = view.n == "detail" ? view.id : 0;
+        toast("Hãy đăng nhập trước nhé 🔑");
+        go("login");
+        return 0;
+      };
+      const msg = (t, b) => `<div class="empty">${t}<br>
+<br>${b ? `<button onclick="home()">← Quay lại</button>` : ""}</div>`;
+      const th = (a, c = "") => `<div class="th ${c}">${tpl(a)}</div>`;
+      /* ===================== ẢNH BÌA: vẽ mẫu quảng cáo bằng SVG ===================== */
+      /* Tự co chữ lại nếu dài hơn khung, để chữ không bị lòi ra ngoài */
+      const fitT = (t, f, w) =>
+        t.length * f * 0.6 > w
+          ? ` textLength="${w}" lengthAdjust="spacingAndGlyphs"`
+          : "";
+      const DIM = {
+        banner: [640, 360],
+        video: [640, 360],
+        poster: [600, 800],
+        social: [600, 750],
+      };
+      const wrap = (s, n) => {
+        const l = [""];
+        let i = 0;
+        String(s)
+          .split(" ")
+          .forEach((x) => {
+            if (l[i] && (l[i] + " " + x).length > n) l[++i] = x;
+            else l[i] = (l[i] + " " + x).trim();
+          });
+        return l.slice(0, 3);
+      };
+      /* Ảnh bìa dạng "sân khấu": mọi thẻ cùng kích thước, thiết kế nằm giữa nền màu */
+      const stage = (a) => {
+        const [w, h] = DIM[a.type] || DIM.banner;
+        const tall = a.type == "poster" || a.type == "social";
+        return `<div class="stage" style="--h:${a.h == null ? 340 : a.h}"><div class="art ${tall ? "tall" : "wide"}" style="aspect-ratio:${w}/${h}">${tpl(a)}</div></div>`;
+      };
+      function tpl(a) {
+        const [W, H] = DIM[a.type] || DIM.banner,
+          h = a.h == null ? 340 : a.h,
+          c = (o, l) => `hsl(${(h + o) % 360} 90% ${l}%)`,
+          k = (a.lay || 0) % 4,
+          m = k == 1,
+          fs = Math.round(W * (H > W ? 0.11 : 0.082)),
+          mx = Math.max(8, Math.round((W * (m ? 0.8 : 0.62)) / (fs * 0.52))),
+          L = wrap(a.t1 || a.title || "", mx),
+          S = wrap(a.t2 || a.desc || "", Math.round(mx * 1.7)).slice(0, 2),
+          cta = a.cta || "Xem ngay",
+          x = m ? W / 2 : W * 0.08,
+          y0 = H > W ? H * 0.2 : H * 0.26,
+          an = m ? "middle" : "start",
+          id = "g" + Math.random().toString(36).slice(2, 8),
+          dk = `hsl(${h} 45% 22%)`;
+        let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="${c(0, 90)}"/>
+<stop offset="1" stop-color="${c(55, 82)}"/>
+</linearGradient>
+</defs>
+<rect width="${W}" height="${H}" fill="url(#${id})"/>`;
+        if (a.img)
+          s += `<image href="${a.img}" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>
+<defs><linearGradient id="${id}o" x1="0" y1="0" x2="${m ? 0 : 1}" y2="${m ? 1 : 0}"><stop offset="0" stop-color="${c(0, 96)}" stop-opacity=".9"/><stop offset=".6" stop-color="${c(0, 96)}" stop-opacity=".35"/><stop offset="1" stop-color="${c(0, 96)}" stop-opacity="0"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#${id}o)"/>`;
+        else
+          s += [
+            `<circle cx="${W * 0.82}" cy="${H * 0.5}" r="${H * 0.34}" fill="${c(300, 94)}" opacity=".8"/>
+<circle cx="${W * 0.7}" cy="${H * 0.86}" r="${H * 0.12}" fill="${c(180, 88)}"/>
+<circle cx="${W * 0.93}" cy="${H * 0.12}" r="${H * 0.07}" fill="#fff" opacity=".9"/>`,
+            `<path d="M0 ${H * 0.8}Q${W * 0.25} ${H * 0.62} ${W * 0.5} ${H * 0.8}T${W} ${H * 0.8}V${H}H0Z" fill="${c(300, 92)}" opacity=".8"/>
+<circle cx="${W * 0.1}" cy="${H * 0.12}" r="${H * 0.1}" fill="#fff" opacity=".8"/>
+<circle cx="${W * 0.9}" cy="${H * 0.2}" r="${H * 0.14}" fill="${c(180, 90)}" opacity=".7"/>`,
+            `<polygon points="${W * 0.55},0 ${W},0 ${W},${H} ${W * 0.3},${H}" fill="${c(300, 92)}" opacity=".85"/>
+<circle cx="${W * 0.8}" cy="${H * 0.35}" r="${H * 0.18}" fill="#fff" opacity=".9"/>
+<circle cx="${W * 0.8}" cy="${H * 0.35}" r="${H * 0.1}" fill="${c(30, 80)}"/>`,
+            `<path d="M${W * 0.6} ${H * 0.92}V${H * 0.35}a${W * 0.2} ${W * 0.2} 0 0 1 ${W * 0.4} 0V${H * 0.92}Z" fill="#fff" opacity=".85"/>
+<path d="M${W * 0.65} ${H * 0.88}V${H * 0.37}a${W * 0.15} ${W * 0.15} 0 0 1 ${W * 0.3} 0V${H * 0.88}Z" fill="${c(300, 86)}"/>
+<circle cx="${W * 0.12}" cy="${H * 0.9}" r="${H * 0.09}" fill="${c(180, 86)}"/>`,
+          ][k];
+        if (a.type == "video")
+          s += `<circle cx="${W * 0.82}" cy="${H * 0.5}" r="${H * 0.11}" fill="#fff"/>
+<path d="M${W * 0.8} ${H * 0.43}v${H * 0.14}l${H * 0.12} ${-H * 0.07}z" fill="${c(0, 60)}"/>`;
+        L.forEach(
+          (t, i) =>
+            (s += `<text x="${x}" y="${y0 + i * fs * 1.08}" text-anchor="${an}" font-family="Baloo 2,Quicksand,Arial,sans-serif" font-weight="800" font-size="${fs}" fill="${dk}"${fitT(t, fs, W * 0.84)}>${esc(t)}</text>`),
+        );
+        const ys = y0 + L.length * fs * 1.08;
+        S.forEach(
+          (t, i) =>
+            (s += `<text x="${x}" y="${ys + i * fs * 0.5}" text-anchor="${an}" font-family="Quicksand,Arial,sans-serif" font-weight="700" font-size="${fs * 0.4}" fill="${dk}"${fitT(t, fs * 0.4, W * 0.84)}>${esc(t)}</text>`),
+        );
+        const cw = Math.min(cta.length * fs * 0.32 + fs * 0.9, W * 0.84),
+          cy = ys + S.length * fs * 0.5 + fs * 0.3,
+          cx = m ? x - cw / 2 : x;
+        return (
+          s +
+          `<rect x="${cx}" y="${cy}" width="${cw}" height="${fs * 0.7}" rx="${fs * 0.35}" fill="${dk}"/>
+<text x="${cx + cw / 2}" y="${cy + fs * 0.46}" text-anchor="middle" font-family="Quicksand,Arial,sans-serif" font-weight="800" font-size="${fs * 0.34}" fill="#fff"${fitT(cta, fs * 0.34, cw - fs * 0.4)}>${esc(cta)}</text>
+</svg>`
+        );
+      }
+      const stars = (n) =>
+        "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+      const card = (
+        a,
+      ) => `<div class="card" onclick="openAd(${a.id})">${stage(a)}<div class="pad">
+<b>${esc(a.title)}</b>
+<div class="meta">${cn(a.cat)} · ${L[a.type]}</div>
+<div class="meta">★ ${avg(a.id).toFixed(1)} · 👁 ${a.views} · 💖 ${ns(a.id)}</div>
+</div>
+</div>`;
+      /* ===================== MENU & ĐIỀU HƯỚNG ===================== */
+      function nav() {
+        const it = [];
+        const m = me ? me.role : "";
+        if (!me || m == "member" || m == "creator")
+          it.push(
+            ["home", "Trang chủ"],
+            ["lib", "Thư viện"],
+            ["studio", "Studio sáng tạo"],
+            ["trend", "Xu hướng"],
+            ["creators", "Nhà sáng tạo"],
+            ["about", "Giới thiệu"],
+          );
+        if (m == "member" || m == "creator") it.push(["fav", "💖 Yêu thích"]);
+        if (m == "creator")
+          it.push(["mine", "🎨 Mẫu của tôi"], ["stats", " Thống kê"]);
+        if (m == "mod")
+          it.push(
+            ["mod", " Kiểm duyệt"],
+            ["cats", "🏷️ Danh mục/Thẻ"],
+            ["cmts", "Bình luận"],
+          );
+        if (m == "admin") it.push(["accts", "👥 Tài khoản"]);
+        let d = it
+          .map(
+            (x) =>
+              `<button class="nv ${view.n == x[0] ? "on" : ""}" onclick="go('${x[0]}')">${x[1]}</button>`,
+          )
+          .join("");
+        let h = me
+          ? `<span class="pill p">${esc(me.name)} · ${RL[me.role]}</span>
+<button class="sm b4" onclick="logout()">Đăng xuất</button>`
+          : `<button class="sm b2" onclick="go('login')">Đăng nhập</button>
+<button class="sm" onclick="go('reg')">Đăng ký</button>`;
+        return [d, h];
+      }
+      function R() {
+        const n = nav();
+        $("#nav").innerHTML = n[1];
+        $("#dock").innerHTML = n[0];
+        $("#app").innerHTML = V[view.n]();
+        save();
+        rv();
+      }
+      const V = {};
+      /* ===================== TRANG THƯ VIỆN: tìm kiếm, lọc, sắp xếp ===================== */
+      V.lib = () => {
+        const op = (l, k) =>
+          l
+            .map(
+              (x) =>
+                `<option value="${x.id}" ${F[k] == x.id ? "selected" : ""}>${esc(x.name)}</option>`,
+            )
+            .join("");
+        let l = DB.ads.filter((a) => a.status == "approved");
+        const q = F.q.toLowerCase();
+        if (q)
+          l = l.filter((a) =>
+            (a.title + a.desc + a.tags.map(tg).join(" "))
+              .toLowerCase()
+              .includes(q),
+          );
+        if (F.cat) l = l.filter((a) => a.cat == F.cat);
+        if (F.style) l = l.filter((a) => a.tags.includes(+F.style));
+        if (F.color) l = l.filter((a) => a.tags.includes(+F.color));
+        if (F.type) l = l.filter((a) => a.type == F.type);
+        l.sort((a, b) =>
+          F.sort == "view"
+            ? b.views - a.views
+            : F.sort == "star"
+              ? avg(b.id) - avg(a.id)
+              : F.sort == "save"
+                ? ns(b.id) - ns(a.id)
+                : b.id - a.id,
+        );
+        return `<div class="hero">
+<h1> Thư viện mẫu quảng cáo sáng tạo</h1>
+<div>Tìm cảm hứng banner, poster, video & social ads thật xinh </div>
+</div>
+<div class="bar">
+<input id="q" placeholder="🔍 Nhập từ khóa..." value="${esc(F.q)}" onkeydown="if(event.key=='Enter')search()">
+<button onclick="search()">Tìm</button>
+<select onchange="F.cat=this.value;R()">
+<option value="">Ngành hàng</option>${op(DB.cats, "cat")}</select>
+<select onchange="F.style=this.value;R()">
+<option value="">Phong cách</option>${op(
+          DB.tags.filter((t) => t.kind == "style"),
+          "style",
+        )}</select>
+<select onchange="F.color=this.value;R()">
+<option value="">Màu sắc</option>${op(
+          DB.tags.filter((t) => t.kind == "color"),
+          "color",
+        )}</select>
+<select onchange="F.type=this.value;R()">
+<option value="">Loại quảng cáo</option>${Object.keys(L)
+          .map(
+            (k) =>
+              `<option value="${k}" ${F.type == k ? "selected" : ""}>${L[k]}</option>`,
+          )
+          .join("")}</select>
+<select onchange="F.sort=this.value;R()">${[
+          ["new", "Mới nhất"],
+          ["view", "Xem nhiều"],
+          ["star", "Đánh giá cao"],
+          ["save", "Lưu nhiều"],
+        ]
+          .map(
+            (x) =>
+              `<option value="${x[0]}" ${F.sort == x[0] ? "selected" : ""}>${x[1]}</option>`,
+          )
+          .join("")}</select>
+<button class="b4" onclick="F={q:'',cat:'',style:'',color:'',type:'',sort:'new'};R()">Xóa lọc</button>
+</div>
+${l.length ? `<div class="grid">${l.map(card).join("")}</div>` : '<div class="empty">Không tìm thấy mẫu phù hợp 🥺</div>'}`;
+      };
+      /* ===================== TRANG CHỦ ===================== */
+      const hs = () => {
+        F.q = $("#hq").value;
+        go("lib");
+      };
+      V.home = () => {
+        const ap = DB.ads.filter((a) => a.status == "approved"),
+          top = [...ap].sort((a, b) => b.views - a.views).slice(0, 8),
+          nw = [...ap]
+            .filter((a) => !top.includes(a))
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 8),
+          more = ap
+            .filter((a) => !top.includes(a) && !nw.includes(a))
+            .slice(0, 8),
+          cr = DB.users.filter((u) => u.role == "creator").length,
+          tv = DB.ads.reduce((s, a) => s + a.views, 0);
+        return `<section class="hero3">
+<div class="fl s1">★</div>
+<div class="fl s2">♥</div>
+<div class="fl s3">✿</div>
+<h1 class="word">${[..."winie"].map((ch, i) => `<span style="--i:${i}">${ch}</span>`).join("")}</h1>
+<p class="sub">Thư viện mẫu quảng cáo sáng tạo. Tìm cảm hứng, tự thiết kế và chia sẻ những quảng cáo thật xinh.</p>
+<div class="bar c">
+<input id="hq" placeholder="Tìm banner, poster, story..." onkeydown="if(event.key=='Enter')hs()">
+<button onclick="hs()">Tìm mẫu</button>
+<button class="b3" onclick="go('studio')">Vào Studio</button>
+</div>
+<div class="fan">${top
+          .slice(0, 3)
+          .map(
+            (a, i) =>
+              `<div class="fc f${i}" onclick="openAd(${a.id})">${th(a, "ar-" + a.type)}</div>`,
+          )
+          .join("")}</div>
+</section>
+<div class="tick">
+<div>${"★ BANNER ★ POSTER ★ STORY ★ VIDEO ADS ★ CAROUSEL ★ SÁNG TẠO MỖI NGÀY ".repeat(4)}</div>
+</div>
+<div class="bento">
+<div class="bt b-a">
+<h2>Studio sáng tạo</h2>
+<p>Chọn bố cục, đổi màu, thêm ảnh của bạn rồi tải PNG chỉ trong một phút.</p>
+<button onclick="go('studio')">Thử ngay</button>
+<div class="mini">${th({ type: "banner", h: 200, lay: 2, t1: "Của Bạn", t2: "Thiết kế trong 1 phút", cta: "Bắt đầu" }, "ar-banner")}</div>
+</div>
+<div class="bt b-b">
+<b>${ap.length}</b>
+<span>mẫu quảng cáo</span>
+</div>
+<div class="bt b-c">
+<b>${cr}</b>
+<span>nhà sáng tạo</span>
+</div>
+<div class="bt b-d">
+<b>${tv}</b>
+<span>lượt xem</span>
+</div>
+<div class="bt b-e">
+<b>${DB.saves.length}</b>
+<span>lượt lưu</span>
+</div>
+</div>
+<h2>Theo ngành hàng</h2>
+<div class="chips">${DB.cats.map((c, i) => `<button class="${["", "b2", "b3", "b4", "b5"][i % 5]}" onclick="F.cat=${c.id};go('lib')">${esc(c.name)}</button>`).join("")}</div>
+<h2>Được yêu thích</h2>
+<div class="grid">${top.map(card).join("")}</div>
+<h2>Mới lên sàn</h2>
+<div class="grid">${nw.map(card).join("")}</div>
+<h2>Khám phá thêm</h2>
+<div class="grid">${more.map(card).join("")}</div>
+<div class="bar c"><button onclick="go('lib')">Xem toàn bộ thư viện</button></div>
+<div class="cta">
+<h2>Sẵn sàng tạo quảng cáo của riêng bạn?</h2>
+<button onclick="go('studio')">Mở Studio</button>
+</div>`;
+      };
+      /* ===================== XU HƯỚNG ===================== */
+      V.trend = () => {
+        const ap = DB.ads.filter((a) => a.status == "approved"),
+          bx = (t, k, f) => `<div class="box">
+<h3>${t}</h3>${[...ap]
+            .sort(k)
+            .slice(0, 5)
+            .map(
+              (
+                a,
+                i,
+              ) => `<div class="row" style="cursor:pointer" onclick="openAd(${a.id})">
+<div class="rk">${i + 1}</div>
+<div class="rt">${th(a)}</div>
+<div style="flex:1">
+<b>${esc(a.title)}</b>
+<div class="meta">${cn(a.cat)}</div>
+</div>
+<span class="pill p">${f(a)}</span>
+</div>`,
+            )
+            .join("")}</div>`;
+        return `<h2>Xu hướng</h2>
+<div class="two">${bx(
+          "Xem nhiều nhất",
+          (a, b) => b.views - a.views,
+          (a) => a.views + " lượt xem",
+        )}${bx(
+          "Đánh giá cao nhất",
+          (a, b) => avg(b.id) - avg(a.id),
+          (a) => avg(a.id).toFixed(1) + " sao",
+        )}${bx(
+          "Được lưu nhiều",
+          (a, b) => ns(b.id) - ns(a.id),
+          (a) => ns(a.id) + " lượt lưu",
+        )}</div>`;
+      };
+      /* ===================== DANH SÁCH NHÀ SÁNG TẠO ===================== */
+      V.creators = () =>
+        `<h2>Nhà sáng tạo</h2>` +
+        (DB.users
+          .filter((u) => u.role == "creator")
+          .map((u) => {
+            const l = DB.ads.filter(
+              (a) => a.owner == u.id && a.status == "approved",
+            );
+            return `<div class="box">
+<div class="row">
+<h3>${esc(u.name)}</h3>
+<span class="pill g">${l.length} mẫu · ${l.reduce((s, a) => s + a.views, 0)} lượt xem</span>
+</div>${l.length ? `<div class="grid">${l.map(card).join("")}</div>` : '<div class="meta">Chưa có mẫu được duyệt</div>'}</div>`;
+          })
+          .join("") || '<div class="empty">Chưa có nhà sáng tạo nào</div>');
+      /* ===================== TRANG GIỚI THIỆU ===================== */
+      let abTab = 0;
+      const WHO = [
+        [
+          "Chủ shop nhỏ",
+          "Cần một tấm banner xinh cho đợt khuyến mãi mà chưa kịp thuê thiết kế? Chọn mẫu, đổi chữ, đổi màu rồi tải về là xong.",
+        ],
+        [
+          "Sinh viên thiết kế",
+          "Xem cách người khác bố cục và phối màu, sau đó thử tay ngay ở Studio để luyện tập mỗi ngày.",
+        ],
+        [
+          "Freelancer",
+          "Đăng mẫu của bạn lên thư viện để nhiều người nhìn thấy, nhận sao và những lời góp ý.",
+        ],
+        [
+          "Người làm nội dung",
+          "Cần story, carousel hay thumbnail video thật nhanh? Mẫu có sẵn đủ tỉ lệ cho từng nền tảng.",
+        ],
+      ];
+      V.about = () => {
+        const ap = DB.ads.filter((a) => a.status == "approved").slice(0, 3);
+        return `<section class="ab-hero">
+<div>
+<span class="pill y">Về Winie</span>
+<h1>Quảng cáo đẹp<br>không nên khó tìm</h1>
+<p class="sub" style="margin-left:0">Winie gom banner, poster, story và video ads vào một góc nhỏ dễ thương. Bạn xem cho vui, lấy cảm hứng, rồi tự tay làm ra phiên bản của riêng mình.</p>
+<div class="bar">
+<button onclick="go('lib')">Xem thư viện</button>
+<button class="b3" onclick="go('studio')">Thử Studio</button>
+</div>
+</div>
+<div class="fan">${ap.map((a, i) => `<div class="fc f${i}" onclick="openAd(${a.id})">${th(a, "ar-" + a.type)}</div>`).join("")}</div>
+</section>
+<h2>Winie hoạt động thế nào</h2>
+<div class="steps">${[
+          [
+            "01",
+            "Tìm cảm hứng",
+            "Lọc theo ngành hàng, phong cách, màu sắc và loại quảng cáo để thấy ngay mẫu hợp với bạn.",
+          ],
+          [
+            "02",
+            "Tự tay thiết kế",
+            "Mở Studio, chọn bố cục, đổi màu, gõ chữ và thêm ảnh của bạn. Xem trước ngay trong lúc làm.",
+          ],
+          [
+            "03",
+            "Chia sẻ",
+            "Gửi mẫu lên thư viện, nhận sao, bình luận và được mọi người lưu vào bộ sưu tập.",
+          ],
+        ]
+          .map(
+            (x) => `<div class="step">
+<b>${x[0]}</b>
+<h3>${x[1]}</h3>
+<p>${x[2]}</p>
+</div>`,
+          )
+          .join("")}</div>
+<h2>Winie dành cho ai</h2>
+<div class="tabs">${WHO.map((w, i) => `<button class="${abTab == i ? "b5" : ""}" onclick="abTab=${i};R()">${w[0]}</button>`).join("")}</div>
+<div class="box who">${WHO[abTab][1]}</div>
+<div class="cta">
+<h2>Bắt đầu thôi nào</h2>
+<p>Chọn một mẫu bạn thích rồi biến nó thành của mình.</p>
+<button onclick="go('studio')">Mở Studio</button>
+</div>`;
+      };
+      const search = () => {
+        F.q = $("#q").value;
+        R();
+      };
+      function openAd(id) {
+        const a = A(id);
+        if (a && a.status == "approved") a.views++;
+        go("detail", id);
+      }
+      /* ===================== TRANG CHI TIẾT: xem, lưu, chấm sao, bình luận ===================== */
+      V.detail = () => {
+        const a = A(view.id);
+        if (!a) return msg("Không tìm thấy mẫu 🥲", 1);
+        if (
+          a.status != "approved" &&
+          !(me && (me.id == a.owner || me.role == "mod"))
+        )
+          return msg("Bạn không có quyền xem mẫu này 🔒", 1);
+        const mine = me && DB.ratings.find((r) => r.ad == a.id && r.u == me.id),
+          saved = me && DB.saves.find((s) => s.ad == a.id && s.u == me.id),
+          cm = DB.comments.filter((c) => c.ad == a.id),
+          rel = DB.ads
+            .filter(
+              (x) =>
+                x.id != a.id &&
+                x.status == "approved" &&
+                (x.cat == a.cat || x.tags.some((t) => a.tags.includes(t))),
+            )
+            .slice(0, 4);
+        return `<button class="b2 sm" onclick="${me && me.role == "mod" && a.status != "approved" ? "go('mod')" : "go('home')"}">← Quay lại</button>
+<div class="box">${th(a, "big ar-" + a.type)}${a.img ? "" : `<div class="strip">${[1, 2, 3, 4].map((k) => th(Object.assign({}, a, { id: a.id * 10 + k, h: (a.h + k * 60) % 360 }), "ar-" + a.type)).join("")}</div>`}<h2>${esc(a.title)} <span class="pill ${ST[a.status][1]}">${ST[a.status][0]}</span>
+</h2>
+<p>${esc(a.desc)}</p>
+<div>
+<span class="pill bl">${cn(a.cat)}</span>
+<span class="pill p">${L[a.type]}</span>${a.tags.map((t) => `<span class="pill y">#${esc(tg(t))}</span>`).join("")}</div>
+<div class="meta">Đăng bởi ${esc(U(a.owner).name)} · ${a.date} · 👁 ${a.views} · 💖 ${ns(a.id)}</div>
+<div style="margin-top:10px">
+<button onclick="toggleSave(${a.id})">${saved ? "💖 Đã lưu (bỏ lưu)" : "🤍 Lưu vào yêu thích"}</button>
+${
+  me && me.role == "mod" && a.status == "pending"
+    ? `<button class="b3" onclick="approve(${a.id})"> Duyệt</button>
+<button class="b4" onclick="reject(${a.id})"> Từ chối</button>`
+    : ""
+}</div>
+</div>
+${
+  a.status == "approved"
+    ? `<div class="box">
+<h3>⭐ Đánh giá: ${avg(a.id).toFixed(1)} / 5 <span class="meta">(${DB.ratings.filter((r) => r.ad == a.id).length} lượt)</span>
+</h3>
+<div>${[1, 2, 3, 4, 5].map((i) => `<span class="star" onclick="rate(${a.id},${i})">${mine && i <= mine.s ? "★" : "☆"}</span>`).join("")}<span class="meta"> ${mine ? "Bạn chấm " + mine.s + " sao (bấm để sửa)" : "Bấm sao để chấm điểm"}</span>
+</div>
+</div>
+<div class="box">
+<h3> Bình luận (${cm.length})</h3>${
+        cm
+          .map(
+            (c) => `<div class="row">
+<div>
+<b>${esc(U(c.u).name)}</b> <span class="meta">${c.d}</span>
+<br>${esc(c.t)}</div>${
+              me && me.id == c.u
+                ? `<div>
+<button class="sm b2" onclick="editCmt(${c.id})">Sửa</button> <button class="sm b4" onclick="delCmt(${c.id})">Xóa</button>
+</div>`
+                : ""
+            }</div>`,
+          )
+          .join("") || '<div class="meta">Chưa có bình luận nào</div>'
+      }
+<div class="bar">
+<input id="ct" placeholder="Viết bình luận..." style="flex:1;min-width:200px" onfocus="need()">
+<button onclick="addCmt(${a.id})">Gửi </button>
+</div>
+</div>
+<h3> Mẫu liên quan</h3>${rel.length ? `<div class="grid">${rel.map(card).join("")}</div>` : '<div class="meta">Chưa có mẫu liên quan</div>'}`
+    : ""
+}`;
+      };
+      function toggleSave(id) {
+        if (!need()) return;
+        const i = DB.saves.findIndex((s) => s.ad == id && s.u == me.id);
+        if (i < 0) {
+          DB.saves.push({ ad: id, u: me.id });
+          toast("Đã lưu vào bộ sưu tập 💖");
+        } else {
+          DB.saves.splice(i, 1);
+          toast("Đã bỏ lưu");
+        }
+        R();
+      }
+      function rate(id, s) {
+        if (!need()) return;
+        const r = DB.ratings.find((x) => x.ad == id && x.u == me.id);
+        r ? (r.s = s) : DB.ratings.push({ ad: id, u: me.id, s });
+        toast("Cảm ơn bạn đã đánh giá ⭐");
+        R();
+      }
+      function addCmt(id) {
+        if (!need()) return;
+        const t = $("#ct").value.trim();
+        if (!t) return toast("Vui lòng nhập nội dung");
+        DB.comments.push({ id: nid(), ad: id, u: me.id, t, d: today() });
+        toast("Đã gửi bình luận ");
+        R();
+      }
+      function editCmt(id) {
+        const c = DB.comments.find((x) => x.id == id),
+          t = prompt("Sửa bình luận:", c.t);
+        if (t === null) return;
+        if (!t.trim()) return toast("Vui lòng nhập nội dung");
+        c.t = t.trim();
+        toast("Đã cập nhật");
+        R();
+      }
+      function delCmt(id) {
+        if (!confirm("Xóa bình luận này?")) return;
+        DB.comments = DB.comments.filter((c) => c.id != id);
+        toast("Đã xóa bình luận");
+        R();
+      }
+      /* ===================== YÊU THÍCH ===================== */
+      V.fav = () => {
+        if (!me) return msg("Hãy đăng nhập để xem bộ sưu tập ");
+        const l = DB.saves
+          .filter((s) => s.u == me.id)
+          .map((s) => A(s.ad))
+          .filter((a) => a && a.status == "approved");
+        return `<h2>💖 Bộ sưu tập yêu thích</h2>${l.length ? `<div class="grid">${l.map(card).join("")}</div>` : '<div class="empty">Bạn chưa lưu mẫu nào 🍬</div>'}`;
+      };
+      /* ===================== ĐĂNG NHẬP & ĐĂNG KÝ ===================== */
+      V.login = () => `<div class="box">
+<h2>🔑 Đăng nhập</h2>
+<div class="f">
+<label>Email</label>
+<input id="em" value="${esc(view.em || "")}">
+<label>Mật khẩu</label>
+<input id="pw" type="password" onkeydown="if(event.key=='Enter')login()">
+<button onclick="login()">Đăng nhập</button>
+<div class="meta">Trải nghiệm nhanh theo vai trò (mật khẩu 123):</div>
+<div>${DB.users.map((u) => `<button class="sm b5" style="margin:2px" onclick="$('#em').value='${u.email}';$('#pw').value='123'">${RL[u.role]}</button>`).join("")}</div>
+</div>
+</div>`;
+      function login() {
+        const u = DB.users.find(
+          (x) => x.email == $("#em").value.trim() && x.pw == $("#pw").value,
+        );
+        if (!u) return toast("Sai email hoặc mật khẩu ");
+        if (u.locked) return toast("Tài khoản đã bị khóa 🔒");
+        me = u;
+        toast("Chào " + u.name + " 🎉");
+        const b = view.back;
+        b ? openAd(b) : home();
+      }
+      function logout() {
+        me = null;
+        toast("Hẹn gặp lại nhé 👋");
+        go("home");
+      }
+      V.reg = () => `<div class="box">
+<h2> Đăng ký</h2>
+<div class="f">
+<label>Họ tên</label>
+<input id="rn">
+<label>Email</label>
+<input id="re">
+<label>Mật khẩu (từ 3 ký tự)</label>
+<input id="rp" type="password">
+<button onclick="reg()">Tạo tài khoản</button>
+</div>
+</div>`;
+      function reg() {
+        const n = $("#rn").value.trim(),
+          e = $("#re").value.trim(),
+          p = $("#rp").value;
+        if (!n || !/^\S+@\S+\.\S+$/.test(e) || p.length < 3)
+          return toast("Thông tin thiếu hoặc sai định dạng");
+        if (DB.users.some((u) => u.email == e))
+          return toast("Email đã được sử dụng, hãy nhập email khác");
+        DB.users.push({
+          id: nid(),
+          name: n,
+          email: e,
+          pw: p,
+          role: "member",
+          locked: 0,
+        });
+        toast("Đăng ký thành công! Hãy đăng nhập ");
+        view.em = e;
+        go("login");
+      }
+      /* ===================== NHÀ SÁNG TẠO: mẫu của tôi, chỉnh sửa, thống kê ===================== */
+      V.mine = () => {
+        if (!me || me.role != "creator")
+          return msg("Chỉ Nhà sáng tạo mới xem được trang này");
+        const l = DB.ads.filter((a) => a.owner == me.id);
+        return `<div class="row">
+<h2> Mẫu của tôi</h2>
+<button onclick="go('studio')">Đăng tải mẫu</button>
+</div>${
+          l.length
+            ? l
+                .map(
+                  (a) => `<div class="box row">
+<div>
+<b>${esc(a.title)}</b> <span class="pill ${ST[a.status][1]}">${ST[a.status][0]}</span>
+<div class="meta">${cn(a.cat)} · ${L[a.type]}${a.reason ? " · Lý do từ chối: " + esc(a.reason) : ""}</div>
+</div>
+<div>
+<button class="sm b2" onclick="go('form',${a.id})">Chỉnh sửa</button> <button class="sm b4" onclick="delAd(${a.id})">Xóa</button>
+</div>
+</div>`,
+                )
+                .join("")
+            : '<div class="empty">Bạn chưa đăng mẫu nào </div>'
+        }`;
+      };
+      V.form = () => {
+        if (!me || me.role != "creator")
+          return msg("Chỉ Nhà sáng tạo mới đăng được mẫu");
+        const a = view.id
+          ? A(view.id)
+          : {
+              title: "",
+              desc: "",
+              type: "banner",
+              cat: DB.cats[0] ? DB.cats[0].id : "",
+              tags: [],
+            };
+        return `<div class="box">
+<h2>${view.id ? "✏️ Chỉnh sửa" : "➕ Đăng tải"} mẫu quảng cáo</h2>
+<div class="f">
+<label>Tên mẫu</label>
+<input id="ft" value="${esc(a.title)}">
+<label>Mô tả</label>
+<textarea id="fd" rows="3">${esc(a.desc)}</textarea>
+<label>Loại quảng cáo</label>
+<select id="fy">${Object.keys(L)
+          .map(
+            (k) =>
+              `<option value="${k}" ${a.type == k ? "selected" : ""}>${L[k]}</option>`,
+          )
+          .join("")}</select>
+<label>Danh mục (ngành hàng)</label>
+<select id="fc">${DB.cats.map((c) => `<option value="${c.id}" ${a.cat == c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
+<label>Thẻ (tag)</label>
+<div>${DB.tags
+          .map(
+            (t) => `<label class="chk">
+<input type="checkbox" name="tg" value="${t.id}" ${a.tags.includes(t.id) ? "checked" : ""}>${esc(t.name)}</label>`,
+          )
+          .join("")}</div>
+<label>Tệp mẫu (ảnh hoặc video) ${view.id ? "— bỏ trống để giữ tệp cũ" : ""}</label>
+<input id="ff" type="file" accept="image/*,video/*">
+<div>
+<button onclick="saveAd()">Gửi mẫu </button> <button class="b4" onclick="go('mine')">Hủy</button>
+</div>
+</div>
+</div>`;
+      };
+      function saveAd() {
+        const t = $("#ft").value.trim(),
+          d = $("#fd").value.trim(),
+          f = $("#ff").files[0],
+          tags = [...document.querySelectorAll("[name=tg]:checked")].map(
+            (x) => +x.value,
+          ),
+          ed = view.id ? A(view.id) : null;
+        if (!t || !d || !DB.cats.length || (!ed && !f))
+          return toast("Thiếu thông tin bắt buộc (tên, mô tả, tệp)");
+        if (f && !/^(image|video)\//.test(f.type))
+          return toast("Tệp không hợp lệ, hãy chọn ảnh hoặc video");
+        const fin = (img) => {
+          const o = {
+            title: t,
+            desc: d,
+            t1: t,
+            t2: d,
+            type: $("#fy").value,
+            cat: +$("#fc").value,
+            tags,
+            status: "pending",
+            reason: "",
+          };
+          if (img !== undefined) o.img = img;
+          if (ed) Object.assign(ed, o);
+          else {
+            const h = Math.floor(Math.random() * 360);
+            DB.ads.push(
+              Object.assign(
+                {
+                  id: nid(),
+                  owner: me.id,
+                  e: "🎀",
+                  h,
+                  views: 0,
+                  img: "",
+                  date: today(),
+                },
+                o,
+              ),
+            );
+          }
+          toast(
+            ed
+              ? "Đã lưu, mẫu chờ duyệt lại ⏳"
+              : "Đăng tải thành công, đang chờ kiểm duyệt ⏳",
+          );
+          go("mine");
+        };
+        if (f && f.type.startsWith("image/") && f.size < 400000) {
+          const r = new FileReader();
+          r.onload = () => fin(r.result);
+          r.readAsDataURL(f);
+        } else fin(f ? "" : undefined);
+      }
+      function delAd(id) {
+        if (!confirm("Bạn chắc chắn muốn xóa mẫu này?")) return;
+        DB.ads = DB.ads.filter((a) => a.id != id);
+        DB.saves = DB.saves.filter((s) => s.ad != id);
+        DB.comments = DB.comments.filter((c) => c.ad != id);
+        DB.ratings = DB.ratings.filter((r) => r.ad != id);
+        toast("Đã xóa mẫu");
+        R();
+      }
+      V.stats = () => {
+        if (!me || me.role != "creator")
+          return msg("Chỉ Nhà sáng tạo mới xem được thống kê");
+        const l = DB.ads.filter((a) => a.owner == me.id),
+          mx = Math.max(1, ...l.map((a) => a.views));
+        return `<h2>📊 Thống kê mẫu của tôi</h2>${
+          l.length
+            ? `<div class="box sc">
+<table>
+<tr>
+<th>Mẫu</th>
+<th>👁 Lượt xem</th>
+<th>
+</th>
+<th> Lượt lưu</th>
+</tr>${l
+                .map(
+                  (a) => `<tr>
+<td>${esc(a.title)}</td>
+<td>${a.views}</td>
+<td>
+<div class="bartrack">
+<i style="width:${(a.views / mx) * 100}%">
+</i>
+</div>
+</td>
+<td>${ns(a.id)}</td>
+</tr>`,
+                )
+                .join("")}</table>
+</div>`
+            : '<div class="empty">Chưa có dữ liệu thống kê 🌥️</div>'
+        }`;
+      };
+      /* ===================== KIỂM DUYỆT VIÊN: duyệt mẫu ===================== */
+      V.mod = () => {
+        if (!me || me.role != "mod")
+          return msg("Chỉ Kiểm duyệt viên mới vào được đây");
+        const l = DB.ads.filter((a) => a.status == "pending");
+        return `<h2> Mẫu chờ kiểm duyệt</h2>${
+          l.length
+            ? `<div class="grid">${l.map(card).join("")}</div>
+<div class="meta" style="margin-top:8px">Bấm vào mẫu để xem chi tiết rồi Duyệt / Từ chối</div>`
+            : '<div class="empty">Không có mẫu chờ duyệt 🎉</div>'
+        }`;
+      };
+      function approve(id) {
+        A(id).status = "approved";
+        A(id).reason = "";
+        toast("Đã duyệt & công khai mẫu ");
+        go("mod");
+      }
+      function reject(id) {
+        const r = prompt("Nhập lý do từ chối:");
+        if (r === null) return;
+        if (!r.trim()) return toast("Cần nhập lý do từ chối");
+        A(id).status = "rejected";
+        A(id).reason = r.trim();
+        toast("Đã từ chối mẫu, thông báo cho nhà sáng tạo");
+        go("mod");
+      }
+      /* ===================== KIỂM DUYỆT VIÊN: danh mục, thẻ, bình luận ===================== */
+      V.cats = () => {
+        if (!me || me.role != "mod")
+          return msg("Chỉ Kiểm duyệt viên mới vào được đây");
+        return `<h2>🏷️ Danh mục (ngành hàng)</h2>
+<div class="box">${DB.cats
+          .map(
+            (c) => `<div class="row">
+<span>${esc(c.name)} <span class="meta">(${DB.ads.filter((a) => a.cat == c.id).length} mẫu)</span>
+</span>
+<div>
+<button class="sm b2" onclick="editC(${c.id})">Sửa</button> <button class="sm b4" onclick="delC(${c.id})">Xóa</button>
+</div>
+</div>`,
+          )
+          .join("")}
+<div class="bar">
+<input id="nc" placeholder="Tên danh mục mới">
+<button onclick="addC()">Thêm</button>
+</div>
+</div>
+<h2>🎀 Thẻ (phong cách / màu sắc)</h2>
+<div class="box">${DB.tags
+          .map(
+            (t) => `<div class="row">
+<span>${esc(t.name)} <span class="pill ${t.kind == "style" ? "bl" : "g"}">${t.kind == "style" ? "phong cách" : "màu sắc"}</span>
+</span>
+<div>
+<button class="sm b2" onclick="editT(${t.id})">Sửa</button> <button class="sm b4" onclick="delT(${t.id})">Xóa</button>
+</div>
+</div>`,
+          )
+          .join("")}
+<div class="bar">
+<input id="nt" placeholder="Tên thẻ mới">
+<select id="nk">
+<option value="style">Phong cách</option>
+<option value="color">Màu sắc</option>
+</select>
+<button onclick="addT()">Thêm</button>
+</div>
+</div>`;
+      };
+      const dup = (l, n, id) =>
+        l.some((x) => x.name.toLowerCase() == n.toLowerCase() && x.id != id);
+      function addC() {
+        const n = $("#nc").value.trim();
+        if (!n) return toast("Hãy nhập tên");
+        if (dup(DB.cats, n)) return toast("Tên danh mục đã tồn tại");
+        DB.cats.push({ id: nid(), name: n });
+        toast("Đã thêm danh mục 🌷");
+        R();
+      }
+      function editC(id) {
+        const c = DB.cats.find((x) => x.id == id),
+          n = prompt("Tên mới:", c.name);
+        if (n === null) return;
+        if (!n.trim() || dup(DB.cats, n.trim(), id))
+          return toast("Tên trống hoặc đã tồn tại");
+        c.name = n.trim();
+        toast("Đã cập nhật");
+        R();
+      }
+      function delC(id) {
+        const u = DB.ads.filter((a) => a.cat == id).length;
+        if (
+          !confirm(
+            u
+              ? `Danh mục đang dùng bởi ${u} mẫu. Vẫn xóa?`
+              : "Xóa danh mục này?",
+          )
+        )
+          return;
+        DB.cats = DB.cats.filter((c) => c.id != id);
+        DB.ads.forEach((a) => {
+          if (a.cat == id) a.cat = DB.cats[0] ? DB.cats[0].id : 0;
+        });
+        toast("Đã xóa danh mục");
+        R();
+      }
+      function addT() {
+        const n = $("#nt").value.trim();
+        if (!n) return toast("Hãy nhập tên");
+        if (dup(DB.tags, n)) return toast("Tên thẻ đã tồn tại");
+        DB.tags.push({ id: nid(), name: n, kind: $("#nk").value });
+        toast("Đã thêm thẻ 🎀");
+        R();
+      }
+      function editT(id) {
+        const c = DB.tags.find((x) => x.id == id),
+          n = prompt("Tên mới:", c.name);
+        if (n === null) return;
+        if (!n.trim() || dup(DB.tags, n.trim(), id))
+          return toast("Tên trống hoặc đã tồn tại");
+        c.name = n.trim();
+        toast("Đã cập nhật");
+        R();
+      }
+      function delT(id) {
+        const u = DB.ads.filter((a) => a.tags.includes(id)).length;
+        if (
+          !confirm(u ? `Thẻ đang dùng bởi ${u} mẫu. Vẫn xóa?` : "Xóa thẻ này?")
+        )
+          return;
+        DB.tags = DB.tags.filter((t) => t.id != id);
+        DB.ads.forEach((a) => (a.tags = a.tags.filter((t) => t != id)));
+        toast("Đã xóa thẻ");
+        R();
+      }
+      V.cmts = () => {
+        if (!me || me.role != "mod")
+          return msg("Chỉ Kiểm duyệt viên mới vào được đây");
+        return `<h2>💬 Quản lý bình luận</h2>
+<div class="box">${
+          DB.comments
+            .map(
+              (c) => `<div class="row">
+<div>
+<b>${esc(U(c.u).name)}</b> <span class="meta">trên “${esc((A(c.ad) || { title: "?" }).title)}” · ${c.d}</span>
+<br>${esc(c.t)}</div>
+<button class="sm b4" onclick="delCmt(${c.id})">Xóa vi phạm</button>
+</div>`,
+            )
+            .join("") || '<div class="empty">Chưa có bình luận 🍃</div>'
+        }</div>`;
+      };
+      /* ===================== QUẢN TRỊ VIÊN: tài khoản ===================== */
+      V.accts = () => {
+        if (!me || me.role != "admin")
+          return msg("Chỉ Quản trị viên mới vào được đây");
+        return `<h2>👥 Quản lý tài khoản</h2>
+<div class="box">${DB.users
+          .map(
+            (u) => `<div class="row">
+<div>
+<b>${esc(u.name)}</b> <span class="pill ${u.locked ? "r" : "g"}">${u.locked ? "Bị khóa" : "Hoạt động"}</span>
+<div class="meta">${esc(u.email)}</div>
+</div>
+<div>
+<select onchange="setRole(${u.id},this.value)">${["member", "creator", "mod"].map((r) => `<option value="${r}" ${u.role == r ? "selected" : ""}>${RL[r]}</option>`).join("")}${u.role == "admin" ? `<option selected>${RL.admin}</option>` : ""}</select> <button class="sm ${u.locked ? "b3" : "b4"}" onclick="lock(${u.id})">${u.locked ? "Mở khóa" : "Khóa"}</button>
+</div>
+</div>`,
+          )
+          .join("")}</div>`;
+      };
+      function lock(id) {
+        const u = U(id);
+        if (id == me.id)
+          return toast("Không thể khóa chính tài khoản đang đăng nhập 🙅");
+        if (!confirm((u.locked ? "Mở khóa" : "Khóa") + " tài khoản này?"))
+          return;
+        u.locked = u.locked ? 0 : 1;
+        toast("Đã cập nhật trạng thái tài khoản");
+        R();
+      }
+      function setRole(id, r) {
+        const u = U(id);
+        if (u.role == "admin" || id == me.id) {
+          toast("Không thể đổi quyền tài khoản này");
+          return R();
+        }
+        if (!confirm("Đổi vai trò thành " + RL[r] + "?")) return R();
+        u.role = r;
+        toast("Đã phân quyền ✅");
+        R();
+      }
+      /* ===================== STUDIO SÁNG TẠO ===================== */
+      let S = {
+        type: "banner",
+        lay: 0,
+        h: 340,
+        t1: "Sale Ngọt Ngào",
+        t2: "Giảm đến 50% cuối tuần này",
+        cta: "Mua ngay",
+        img: "",
+        cat: 1,
+      };
+      const pv = () => {
+        const e = $("#pv");
+        if (e) e.innerHTML = tpl(S);
+      };
+      V.studio = () => `<div class="hero2">
+<h1>Studio sáng tạo</h1>
+<p>Tự thiết kế quảng cáo: chọn bố cục, màu, chữ và ảnh nền rồi tải về hoặc đăng vào thư viện.</p>
+</div>
+<div class="studio">
+<div class="box f">
+<label>Loại quảng cáo</label>
+<select onchange="S.type=this.value;R()">${Object.keys(L)
+        .map(
+          (k) =>
+            `<option value="${k}" ${S.type == k ? "selected" : ""}>${L[k]}</option>`,
+        )
+        .join("")}</select>
+<label>Bố cục</label>
+<div>${["Trái", "Giữa", "Chéo", "Vòm"].map((n, i) => `<button class="sm ${S.lay == i ? "b5" : ""}" onclick="S.lay=${i};R()">${n}</button>`).join(" ")}</div>
+<label>Màu chủ đạo</label>
+<input class="hue" type="range" min="0" max="359" value="${S.h}" oninput="S.h=+this.value;pv()">
+<label>Tiêu đề</label>
+<input value="${esc(S.t1)}" oninput="S.t1=this.value;pv()">
+<label>Dòng phụ</label>
+<input value="${esc(S.t2)}" oninput="S.t2=this.value;pv()">
+<label>Nút kêu gọi</label>
+<input value="${esc(S.cta)}" oninput="S.cta=this.value;pv()">
+<label>Ảnh nền (tuỳ chọn)</label>
+<input type="file" accept="image/*" onchange="bgImg(this)">
+<label>Ngành hàng (khi đăng)</label>
+<select onchange="S.cat=+this.value">${DB.cats.map((c) => `<option value="${c.id}" ${S.cat == c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
+</div>
+<div>
+<div id="pv" class="th pvx ar-${S.type}">${tpl(S)}</div>
+<div class="bar c">
+<button onclick="dl()">Tải PNG</button>
+<button class="b3" onclick="pubS()">Đăng vào thư viện</button>${S.img ? `<button class="b4" onclick="S.img='';R()">Bỏ ảnh nền</button>` : ""}</div>
+</div>
+</div>`;
+      function bgImg(i) {
+        const f = i.files[0];
+        if (!f) return;
+        if (!f.type.startsWith("image/")) return toast("Hãy chọn một tệp ảnh");
+        if (f.size > 1.5e6)
+          return toast("Ảnh hơi nặng, chọn ảnh dưới 1.5MB nhé");
+        const r = new FileReader();
+        r.onload = () => {
+          S.img = r.result;
+          R();
+        };
+        r.readAsDataURL(f);
+      }
+      function dl() {
+        const [W, H] = DIM[S.type],
+          im = new Image();
+        im.onload = () => {
+          const c = document.createElement("canvas");
+          c.width = W * 2;
+          c.height = H * 2;
+          c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+          c.toBlob((b) => {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(b);
+            a.download = "winie-" + S.type + ".png";
+            a.click();
+            toast("Đã tải ảnh về 🎉");
+          });
+        };
+        im.src =
+          "data:image/svg+xml;charset=utf-8," +
+          encodeURIComponent(
+            new XMLSerializer().serializeToString($("#pv svg")),
+          );
+      }
+      function pubS() {
+        if (!me) return need();
+        if (me.role != "creator")
+          return toast(
+            "Chỉ Nhà sáng tạo mới đăng được vào thư viện. Bạn vẫn tải PNG được nhé!",
+          );
+        if (!S.t1.trim()) return toast("Hãy nhập tiêu đề");
+        DB.ads.push({
+          id: nid(),
+          title: S.t1.trim(),
+          desc: S.t2.trim() || S.t1.trim(),
+          type: S.type,
+          cat: S.cat,
+          tags: [],
+          h: S.h,
+          t1: S.t1,
+          t2: S.t2,
+          cta: S.cta,
+          lay: S.lay,
+          img: S.img,
+          owner: me.id,
+          status: "pending",
+          reason: "",
+          views: 0,
+          date: today(),
+        });
+        toast("Đã gửi mẫu, đang chờ kiểm duyệt ⏳");
+        go("mine");
+      }
+      /* ===================== HIỆU ỨNG: pháo hoa, hiện dần, nghiêng 3D, lấp lánh ===================== */
+      function burst() {
+        for (let i = 0; i < 16; i++) {
+          const s = document.createElement("i");
+          s.className = "sp b";
+          s.textContent = "✦✿♥★"[i % 4];
+          s.style.cssText = `left:50%;top:60%;--x:${(Math.random() - 0.5) * 500}px;--y:${-Math.random() * 320}px;color:hsl(${Math.random() * 360} 85% 70%)`;
+          document.body.appendChild(s);
+          setTimeout(() => s.remove(), 1000);
+        }
+      }
+      const io = new IntersectionObserver(
+        (es) =>
+          es.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("in");
+              io.unobserve(e.target);
+            }
+          }),
+        { threshold: 0.08 },
+      );
+      const rv = () =>
+        document
+          .querySelectorAll(
+            "#app .grid>*,#app .box,#app .bt,#app h2,#app details",
+          )
+          .forEach((el) => {
+            el.classList.add("rv");
+            io.observe(el);
+          });
+      let lt = 0;
+      addEventListener("pointermove", (e) => {
+        const c = e.target.closest && e.target.closest(".card");
+        if (c) {
+          const r = c.getBoundingClientRect(),
+            x = (e.clientX - r.left) / r.width - 0.5,
+            y = (e.clientY - r.top) / r.height - 0.5;
+          c.style.transform = `perspective(700px) rotateY(${x * 12}deg) rotateX(${-y * 12}deg) scale(1.03)`;
+        }
+        const n = Date.now();
+        if (n - lt < 70 || e.pointerType == "touch") return;
+        lt = n;
+        const s = document.createElement("i");
+        s.className = "sp";
+        s.textContent = "✦✿♥★"[n % 4];
+        s.style.cssText = `left:${e.clientX}px;top:${e.clientY}px;color:hsl(${n % 360} 85% 70%)`;
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), 800);
+      });
+      addEventListener("pointerout", (e) => {
+        const c = e.target.closest && e.target.closest(".card");
+        if (c) c.style.transform = "";
+      });
+
+      R();
+    </script>
+  </body>
+</html>
